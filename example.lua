@@ -44,7 +44,7 @@ end
 end
 
 function Home()
-local menu = gg.choice({"Class By Name","Field By Name","Method By Name"},nil,"Ｍｉｙａｎ"?)
+local menu = gg.choice({"Class By Name","Field By Name","Method By Name"},nil,"Ｍｉｙａｎ")
 if not menu then return end
 if menu == 1 then
 ClassByName()
@@ -52,7 +52,7 @@ end
 if menu == 2 then
 FieldByName()
 end
-if menu == 1 then
+if menu == 3 then
 MethodByName()
 end
 end
