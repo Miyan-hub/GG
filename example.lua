@@ -30,7 +30,7 @@ for x = 1,#method do
 for i,v in ipairs(method[x]) do
 t[i] = {}
 t[i].address = "0x"..v.AddressInMemory
-t[i].flags = 4
+t[i].flags = 16
 t[i].name = [[
 ClassName: ]]..v.ClassName..[[
 
