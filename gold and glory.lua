@@ -1,0 +1,17 @@
+require('Il2cppApi')
+Il2cpp({il2cppVersion = 29})
+
+method = Il2cpp.FindMethods({
+"CanEquip"
+})
+t = {}
+for x = 1,#method do
+for i,v in ipairs(method[x]) do
+t[i] = {}
+t[i].address = "0x"..v.AddressInMemory
+t[i].value = "200080D2C0035FD6r"
+t[i].flags = 32
+end
+gg.setValues(t)
+gg.addListItems(t)
+end
