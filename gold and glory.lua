@@ -4,7 +4,7 @@ Il2cpp({il2cppVersion = 29})
 -- Define and process methods
 local methodGroups = {
     {
-        methods = {"CanEquip", "IsSkillEnableWithWeapon", "get_CanJump", "CheckCanStandUp", "get_IsOpen"},
+        methods = {"CanEquip", "IsSkillEnableWithWeapon", "get_CanJump", "CheckCanStandUp"},
         value = "200080D2C0035FD6r"
     },
     {
