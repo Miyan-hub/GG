@@ -1,6 +1,3 @@
-require('Il2cppApi')
-Il2cpp({il2cppVersion = 29})
-
 function table.find(tbl, val)
     for _, v in ipairs(tbl) do
         if v == val then
@@ -9,6 +6,9 @@ function table.find(tbl, val)
     end
     return false
 end
+
+require('Il2cppApi')
+Il2cpp({il2cppVersion = 29})
 
 local methodGroups = {
     {
@@ -30,16 +30,20 @@ local methodGroups = {
     }
 }
 
+local results = {}
 local t = {}
 local index = 1
 
 for _, group in ipairs(methodGroups) do
     for _, methodName in ipairs(group.methodName) do
         local method = Il2cpp.FindMethods({methodName})
+        local offsets = {}
 
         for x = 1, #method do
             for _, v in ipairs(method[x]) do
                 if not group.className or table.find(group.className, v.ClassName) then
+                    table.insert(offsets, v.Offset)
+                    
                     t[index] = {
                         address = "0x" .. v.AddressInMemory,
                         value = group.value,
@@ -47,7 +51,7 @@ for _, group in ipairs(methodGroups) do
                         name = [[
 ClassName: ]]..v.ClassName..[[
 
-Name: ]]..v.MethodName..[[
+MethodName: ]]..v.MethodName..[[
 
 Offset: ]]..v.Offset
                     }
@@ -55,8 +59,26 @@ Offset: ]]..v.Offset
                 end
             end
         end
+
+        if #offsets > 0 then
+            table.insert(results, {
+                methodName = methodName,
+                offsets = offsets,
+                value = group.value
+            })
+        end
     end
 end
+
+local file = io.open("gng_offset.txt", "w")
+
+for _, result in ipairs(results) do
+    file:write("MethodName: " .. result.methodName .. "\n")
+    file:write("Value: " .. result.value .. "\n")
+    file:write("Offsets: " .. table.concat(result.offsets, ", ") .. "\n\n")
+end
+
+file:close()
 
 gg.setValues(t)
 gg.addListItems(t)
