@@ -9,15 +9,15 @@ local function find_library_base(lib_name, state_filter)
     return nil
 end
 
-local function generate_method_table(lib_base, method, active)
+local function generate_method_table(lib_base, method)
     local t = {}
-    local value = active and "h" .. method.value or original_values[method.name][1].value
-    
+    local value = method.value
+
     for _, offset in ipairs(method.offsets) do
         table.insert(t, {
             address = lib_base + offset,
             flags = 32,
-            value = value,
+            value = "h" .. value,
             name = method.name
         })
     end
@@ -39,7 +39,8 @@ local method_list_64bit = {
     {name = "Equip All Armor", offsets = {0x1C83178}, value = "200080D2C0035FD6"},
     {name = "Use Skill Without Weapon", offsets = {0x1C722A8}, value = "200080D2C0035FD6"},
     {name = "See Items Color in Chest", offsets = {0x1B9389C, 0x1B97CAC}, value = "200080D2C0035FD6"},
-    {name = "Skip Search Loot", offsets = {0x1C869E8}, value = "200080D2C0035FD6"}
+    {name = "Skip Search Loot", offsets = {0x1C869E8}, value = "200080D2C0035FD6"},
+    {name = "Attack Team", offsets = {0x1BAE180}, value = "000080D2C0035FD6"}
 }
 
 local method_list_32bit = {
@@ -47,48 +48,48 @@ local method_list_32bit = {
     {name = "Equip All Armor", offsets = {0x0000000}, value = "0000000000000000"},
     {name = "Use Skill Without Weapon", offsets = {0x0000000}, value = "0000000000000000"},
     {name = "See Items Color in Chest", offsets = {0x0000000}, value = "0000000000000000"},
-    {name = "Skip Search Loot", offsets = {0x0000000}, value = "0000000000000000"}
+    {name = "Skip Search Loot", offsets = {0x0000000}, value = "0000000000000000"},
+    {name = "Attack Team", offsets = {0x0000000}, value = "0000000000000000"}
 }
 
 local method_list = is64bit and method_list_64bit or method_list_32bit
 
-local feature_states = {
-    ["Unlimited Jump"] = false,
-    ["Equip All Armor"] = false,
-    ["Use Skill Without Weapon"] = false,
-    ["See Items Color in Chest"] = false,
-    ["Skip Search Loot"] = false
-}
-
+local method_status = {}
 local original_values = {}
 
-local function save_original_values()
-    for _, method in ipairs(method_list) do
-        local values = {}
-        for _, offset in ipairs(method.offsets) do
-            table.insert(values, {address = lib_base + offset, flags = 32})
-        end
-        original_values[method.name] = gg.getValues(values)
-    end
+for _, method in ipairs(method_list) do
+    method_status[method.name] = false
+    original_values[method.name] = {}
 end
-
-save_original_values()
 
 local function show_menu()
     local choices = {}
-    for _, method in ipairs(method_list) do
-        table.insert(choices, method.name .. (feature_states[method.name] and " (ON)" or " (OFF)"))
+    local default_choices = {}
+
+    for i, method in ipairs(method_list) do
+        table.insert(choices, method.name .. (method_status[method.name] and " [ON]" or " [OFF]"))
+        table.insert(default_choices, method_status[method.name])
     end
 
     local selected = gg.multiChoice(choices, nil, "Select features to toggle")
 
     if selected then
         for i, _ in pairs(selected) do
-            local feature_name = method_list[i].name
-            feature_states[feature_name] = not feature_states[feature_name]
-            local method_table = generate_method_table(lib_base, method_list[i], feature_states[feature_name])
-            gg.setValues(method_table)
-            gg.toast(feature_name .. (feature_states[feature_name] and " active" or " nonactive"))
+            local method_table = generate_method_table(lib_base, method_list[i])
+            if method_status[method_list[i].name] then
+                -- Restore original values
+                gg.setValues(original_values[method_list[i].name])
+                gg.toast(method_list[i].name .. " disabled")
+            else
+                -- Save current values
+                for _, entry in ipairs(method_table) do
+                    table.insert(original_values[method_list[i].name], gg.getValues({entry})[1])
+                end
+                -- Apply new values
+                gg.setValues(method_table)
+                gg.toast(method_list[i].name .. " enabled")
+            end
+            method_status[method_list[i].name] = not method_status[method_list[i].name]
         end
     else
         gg.toast("No feature selected")
