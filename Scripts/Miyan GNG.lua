@@ -4,11 +4,13 @@ local function fetch_and_execute_script(url)
         gg.alert("Failed to fetch script from URL.")
         return
     end
-    local func, err = pcall(load(content))
-    if not func then
+    local func, err = load(content)
+    if func then
+        func()
+    else
         gg.alert("Error loading script: " .. err)
     end
 end
 
-local script_url = "https://pastebin.com/raw/itsHS0BJ"
+local script_url = "https://miyanvercel.vercel.app/script"
 fetch_and_execute_script(script_url)
